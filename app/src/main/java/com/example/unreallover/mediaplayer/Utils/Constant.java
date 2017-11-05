@@ -11,6 +11,10 @@ public class Constant {
     public static final int M_NONE = 0x11;
     public static final int M_PLAYING = 0x12;
     public static final int M_PAUSE = 0x13;
+    public static final int CIRCLE = 1;
+    public static final int SELF = 2;
+    public static final int RANDOM = 3;
+    public static final int UPDATE_TEXT = 4;
     public static final int REQUEST_EXTERNAL_STORAGE = 1;
     public static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,

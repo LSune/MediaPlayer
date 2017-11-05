@@ -1,0 +1,47 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/file_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"/>
+        style="@style/NotificationTitle"/>
+    <ProgressBar
+        android:id="@+id/progressBar2"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="7.5dp"
+        android:max="100"
+        android:progress="80"
+        android:layout_marginRight="8dp"/>
+        <!--android:progressDrawable="@drawable/progressbar"-->
+        <!--android:visibility="visible" />-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+
+
+        <Button
+            android:id="@+id/start_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="开始"
+            style="@style/NotificationInfo"/>
+
+        <TextView
+            android:id="@+id/rate2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/stop_button"
+            android:layout_weight="1"
+            style="@style/NotificationInfo"/>
+    </LinearLayout>
+
+</LinearLayout>
