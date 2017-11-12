@@ -22,6 +22,15 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".widget.Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/app_widght"/>
+        </receiver>
+
         <service
             android:name=".Services.MusicService"
             android:enabled="true"

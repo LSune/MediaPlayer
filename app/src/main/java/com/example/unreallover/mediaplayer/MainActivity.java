@@ -1,6 +1,8 @@
 package com.example.unreallover.mediaplayer;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
@@ -8,9 +10,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -18,18 +29,25 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.example.unreallover.mediaplayer.Entities.LrcContent;
 import com.example.unreallover.mediaplayer.Entities.Music;
 import com.example.unreallover.mediaplayer.Services.MusicService;
 import com.example.unreallover.mediaplayer.Utils.Constant;
+import com.example.unreallover.mediaplayer.Utils.LrcProcess;
 import com.example.unreallover.mediaplayer.Utils.NotificationUtils;
+import com.example.unreallover.mediaplayer.Views.LrcView;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -42,14 +60,24 @@ import static com.example.unreallover.mediaplayer.Utils.Constant.SER_KEY;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+    int target = 1;
 
+    public static LrcView lrcView;
+
+    RelativeLayout change;
+
+    private LrcProcess mLrcProcess; //歌词处理
+    private List<LrcContent> lrcList = new ArrayList<LrcContent>(); //存放歌词列表对象
+    private int index = 0;          //歌词检索值
 
     // 获取界面中显示歌曲标题、作者文本框
-    TextView title, artist;
+    TextView title, artist,totaltime,nowtime;
     // 播放/暂停、停止按钮
-    ImageButton play,mode,timec;
+    ImageButton play,mode,timec,pre,next;
 
     NotificationUtils mNotificationUtil;
+
+    private ObjectAnimator discObjectAnimator,neddleObjectAnimator;
 
     int token = 0;
 
@@ -93,16 +121,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
+
         moDe = CIRCLE;
                 // 获取程序界面界面中的两个按钮
         play = (ImageButton) this.findViewById(R.id.play);
         mode = (ImageButton) this.findViewById(R.id.play_mode);
         timec = (ImageButton) this.findViewById(R.id.timer);
+        pre = (ImageButton) this.findViewById(R.id.preview);
+        next = (ImageButton) this.findViewById(R.id.next);
         title = (TextView) findViewById(R.id.title);
         artist = (TextView) findViewById(R.id.artist);
+        change = (RelativeLayout) findViewById(R.id.change);
+        nowtime = (TextView) findViewById(R.id.pass_time);
+        totaltime = (TextView) findViewById(R.id.main_time);
+
+        lrcView = (LrcView) findViewById(R.id.lrcShowView);
         // 为两个按钮的单击事件添加监听器
         play.setOnClickListener(this);
         mode.setOnClickListener(this);
+        pre.setOnClickListener(this);
+        next.setOnClickListener(this);
         timec.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -110,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                startActivity(intent);
             }
         });
-
+        Initview();
         activityReceiver = new ActivityReceiver();
         // 创建IntentFilter
         IntentFilter filter = new IntentFilter();
@@ -259,21 +298,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             int update = intent.getIntExtra("update", -1);
             int finish = intent.getIntExtra("finish", -1);
             Log.i("finish", "onReceive: "+finish);
-            if (finish!=-1) {
-                seekBar.setProgress(finish);
-            }
+
             moDe = intent.getIntExtra("moDe",-1);
+            int curret = intent.getIntExtra("current", -1);
+            if (curret != -1){
+                current = curret;
+            }
+            if (finish!=-1) {
+//                int progress = (int) (finish* 100 / musicList.get(current).getduration() );
+                int progress = finish;
+                seekBar.setProgress(progress);
+            }
             // 获取Intent中的current消息，current代表当前正在播放的歌曲
 
-            int curret = intent.getIntExtra("current", -1);
+
             if (curret != -1 && mNotificationUtil!=null) {
                 mNotificationUtil.cancelNotification(current);
                 current = curret;
             }
-            if (current >= 0 && musicList != null)
+            if (curret >= 0 && musicList != null)
             {
+
+                current = curret;
                 title.setText(musicList.get(current).gettitle());
                 artist.setText(musicList.get(current).getartist());
+                int min = (int)musicList.get(current).getduration()/(60*1000);
+                int sec = (int)(musicList.get(current).getduration()-min*60*1000)/1000;
+                totaltime.setText(min+":"+sec);
             }
             switch (moDe)
             {
@@ -298,6 +349,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // 播放状态下设置使用暂停图标
                     play.setImageResource(R.drawable.pause);
                     // 设置当前状态
+                    discObjectAnimator.start();
+                    neddleObjectAnimator.start();
                     status = Constant.M_PLAYING;
                     break;
                 // 控制系统进入暂停状态
@@ -305,6 +358,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // 暂停状态下设置使用播放图标
                     play.setImageResource(R.drawable.play);
                     // 设置当前状态
+                    discObjectAnimator.cancel();
+                    neddleObjectAnimator.reverse();
                     status = Constant.M_PAUSE;
                     break;
             }
@@ -328,6 +383,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         {
             case R.id.play_mode:
                 intent.putExtra("mode" ,moDe);
+                break;
+        }
+
+        switch (source.getId())
+        {
+            case R.id.preview:
+                intent.putExtra("control", 2);
+                break;
+        }
+
+        switch (source.getId())
+        {
+            case R.id.next:
+                intent.putExtra("control", 3);
                 break;
         }
         // 发送广播，将被Service组件中的BroadcastReceiver接收到
@@ -363,5 +432,92 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+
+    public void Initview(){
+
+        //最外部的半透明边线
+        OvalShape ovalShape0 = new OvalShape();
+        ShapeDrawable drawable0 = new ShapeDrawable(ovalShape0);
+        drawable0.getPaint().setColor(0x10000000);
+        drawable0.getPaint().setStyle(Paint.Style.FILL);
+        drawable0.getPaint().setAntiAlias(true);
+
+        //黑色唱片边框
+        RoundedBitmapDrawable drawable1 = RoundedBitmapDrawableFactory.create(getResources(),
+                BitmapFactory.decodeResource(getResources(), R.drawable.disc));
+        drawable1.setCircular(true);
+        drawable1.setAntiAlias(true);
+
+        //内层黑色边线
+        OvalShape ovalShape2 = new OvalShape();
+        ShapeDrawable drawable2 = new ShapeDrawable(ovalShape2);
+        drawable2.getPaint().setColor(Color.BLACK);
+        drawable2.getPaint().setStyle(Paint.Style.FILL);
+        drawable2.getPaint().setAntiAlias(true);
+
+        //最里面的图像
+        RoundedBitmapDrawable drawable3 = RoundedBitmapDrawableFactory.create(getResources(),
+                BitmapFactory.decodeResource(getResources(), R.drawable.chicken));
+        drawable3.setCircular(true);
+        drawable3.setAntiAlias(true);
+
+        Drawable[] layers = new Drawable[4];
+        layers[0] = drawable0;
+        layers[1] = drawable1;
+        layers[2] = drawable2;
+        layers[3] = drawable3;
+
+        LayerDrawable layerDrawable = new LayerDrawable(layers);
+
+        int width = 10;
+        //针对每一个图层进行填充，使得各个圆环之间相互有间隔，否则就重合成一个了。
+        //layerDrawable.setLayerInset(0, width, width, width, width);
+        layerDrawable.setLayerInset(1, width , width, width, width );
+        layerDrawable.setLayerInset(2, width * 11, width * 11, width * 11, width * 11);
+        layerDrawable.setLayerInset(3, width * 12, width * 12, width * 12, width * 12);
+
+        final View discView = findViewById(R.id.myView);
+        discView.setBackgroundDrawable(layerDrawable);
+
+        final ImageView needleImage= (ImageView) findViewById(R.id.needle);
+
+        discObjectAnimator = ObjectAnimator.ofFloat(discView, "rotation", 0, 360);
+        discObjectAnimator.setDuration(20000);
+        //使ObjectAnimator动画匀速平滑旋转
+        discObjectAnimator.setInterpolator(new LinearInterpolator());
+        //无限循环旋转
+        discObjectAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        discObjectAnimator.setRepeatMode(ValueAnimator.INFINITE);
+
+
+        neddleObjectAnimator = ObjectAnimator.ofFloat(needleImage, "rotation", 0, 25);
+        needleImage.setPivotX(0);
+        needleImage.setPivotY(0);
+        neddleObjectAnimator.setDuration(800);
+        neddleObjectAnimator.setInterpolator(new LinearInterpolator());
+
+        if (change == null){
+            Log.i("change is nulllllllllllllllllllll", "Initview: ");
+        }
+
+
+        change.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (target == 1) {
+                    discView.setVisibility(View.INVISIBLE);
+                    needleImage.setVisibility(View.INVISIBLE);
+                    lrcView.setVisibility(View.VISIBLE);
+                    target = 0;
+                }
+                else{
+                    discView.setVisibility(View.VISIBLE);
+                    needleImage.setVisibility(View.VISIBLE);
+                    lrcView.setVisibility(View.INVISIBLE);
+                    target = 1;
+                }
+            }
+        });
     }
 }

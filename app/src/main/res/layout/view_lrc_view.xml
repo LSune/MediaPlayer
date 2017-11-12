@@ -1,0 +1,6 @@
+<com.example.unreallover.mediaplayer.Views.LrcView
+    android:id="@+id/lrcShowView"
+    android:layout_width="match_parent"
+    android:layout_height="200dip"
+    android:layout_centerHorizontal="true"
+    xmlns:android="http://schemas.android.com/apk/res/android" />
