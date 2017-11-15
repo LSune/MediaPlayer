@@ -63,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int target = 1;
 
     public static LrcView lrcView;
+    public static SeekBar seekBar;
+    public static TextView nowtime;
 
     RelativeLayout change;
 
@@ -71,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int index = 0;          //歌词检索值
 
     // 获取界面中显示歌曲标题、作者文本框
-    TextView title, artist,totaltime,nowtime;
+    TextView title, artist,totaltime;
     // 播放/暂停、停止按钮
     ImageButton play,mode,timec,pre,next;
 
@@ -85,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     int current;
 
-    private SeekBar seekBar;
+
     int moDe;
     ActivityReceiver activityReceiver;
 
@@ -184,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 if (fromUser) { //必须这个判断，是否为用户拉动导致的进度变更，否则会造成播放卡顿现象
                     mPercent = (float) progress * 100 / (float) seekBar.getMax();
+
                 }
 
             }
@@ -304,14 +307,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (curret != -1){
                 current = curret;
             }
-            if (finish!=-1) {
-//                int progress = (int) (finish* 100 / musicList.get(current).getduration() );
-                int progress = finish;
-                seekBar.setProgress(progress);
-            }
+
             // 获取Intent中的current消息，current代表当前正在播放的歌曲
-
-
             if (curret != -1 && mNotificationUtil!=null) {
                 mNotificationUtil.cancelNotification(current);
                 current = curret;
@@ -324,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 artist.setText(musicList.get(current).getartist());
                 int min = (int)musicList.get(current).getduration()/(60*1000);
                 int sec = (int)(musicList.get(current).getduration()-min*60*1000)/1000;
-                totaltime.setText(min+":"+sec);
+                totaltime.setText((min<10?"0"+min:min)+":"+(sec<10?"0"+sec:sec));
             }
             switch (moDe)
             {

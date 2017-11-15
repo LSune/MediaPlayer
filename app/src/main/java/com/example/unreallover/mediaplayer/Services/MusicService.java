@@ -28,6 +28,7 @@ import com.example.unreallover.mediaplayer.Utils.LrcProcess;
 
 import static com.example.unreallover.mediaplayer.MainActivity.CTL_ACTION;
 import static com.example.unreallover.mediaplayer.MainActivity.lrcView;
+import static com.example.unreallover.mediaplayer.MainActivity.nowtime;
 import static com.example.unreallover.mediaplayer.Utils.Constant.CIRCLE;
 import static com.example.unreallover.mediaplayer.Utils.Constant.RANDOM;
 import static com.example.unreallover.mediaplayer.Utils.Constant.SELF;
@@ -311,20 +312,20 @@ public class MusicService extends Service
                 Intent intent = new Intent(MainActivity.UPDATE_ACTION);
                 long time = System.currentTimeMillis();
 
-                while (progress<=100&& token ==1 )
-                {
-                    if (System.currentTimeMillis() - time > 1000
-                            ) {
-
-                        progress = (int) (mPlayer.getCurrentPosition()* 100 / musicList.get(current).getduration() );
-
-                        time = System.currentTimeMillis();
-                        Log.i(TAG, "run: "+progress);
-//                        intent.putExtra("finish", mPlayer.getCurrentPosition());
-                        intent.putExtra("finish", progress);
-                        sendBroadcast(intent);
-                    }
-                }
+//                while (progress<=100&& token ==1 )
+//                {
+//                    if (System.currentTimeMillis() - time > 1000
+//                            ) {
+//
+//                        progress = (int) (mPlayer.getCurrentPosition()* 100 / musicList.get(current).getduration() );
+//
+//                        time = System.currentTimeMillis();
+//                        Log.i(TAG, "run: "+progress);
+////                        intent.putExtra("finish", mPlayer.getCurrentPosition());
+//                        intent.putExtra("finish", progress);
+//                        sendBroadcast(intent);
+//                    }
+//                }
 
             }
         }).start();
@@ -367,6 +368,8 @@ public void initLrc(){
         public void run() {
             MainActivity.lrcView.setIndex(lrcIndex());
             MainActivity.lrcView.invalidate();
+            MainActivity.seekBar.setProgress(progressUp());
+            MainActivity.nowtime.setText(nowtimeUp());
             handler.postDelayed(mRunnable, 100);
         }
     };
@@ -396,6 +399,27 @@ public void initLrc(){
         return index;
     }
 
+    public int progressUp() {
+        if(mPlayer.isPlaying()||currentTime < duration) {
+            currentTime = mPlayer.getCurrentPosition();
+            duration = mPlayer.getDuration();
+            progress = (currentTime* 100 / duration );
+        }
+
+        return progress;
+    }
+
+    public String nowtimeUp(){
+        String nowTime = "00:00";
+        if(mPlayer.isPlaying()||currentTime < duration) {
+            int min = mPlayer.getCurrentPosition()/(60*1000);
+            int sec = (mPlayer.getCurrentPosition()-min*60*1000)/1000;
+            nowTime = (min<10?"0"+min:min)+":"+(sec<10?"0"+sec:sec);
+        }
+
+        return nowTime;
+    }
+
     private Handler handler = new Handler() {
         public void handleMessage(android.os.Message msg) {
             if (msg.what == 1) {
@@ -408,7 +432,7 @@ public void initLrc(){
                     handler.sendEmptyMessageDelayed(1, 1000);
                 }
             }
-        };
+        }
     };
 }
 
