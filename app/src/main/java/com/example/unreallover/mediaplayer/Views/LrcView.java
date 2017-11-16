@@ -11,8 +11,12 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.Scroller;
 
 import com.example.unreallover.mediaplayer.Entities.LrcContent;
+import com.example.unreallover.mediaplayer.Utils.MyApplication;
 
 
 /**
@@ -24,9 +28,14 @@ public class LrcView extends android.support.v7.widget.AppCompatTextView {
     private float height;       //歌词视图高度
     private Paint currentPaint; //当前画笔对象
     private Paint notCurrentPaint;  //非当前画笔对象
-    private float textHeight = 60;  //文本高度
-    private float textSize = 45;        //文本大小
     private int index = 0;      //list集合下标
+    Scroller mScroller;
+    float mLastX;
+    float mLastY;
+    long dt;
+    long time;
+    boolean token = true;
+
 
 
     private List<LrcContent> mLrcList = new ArrayList<LrcContent>();
@@ -63,6 +72,47 @@ public class LrcView extends android.support.v7.widget.AppCompatTextView {
         notCurrentPaint.setTextAlign(Paint.Align.CENTER);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int dx = 0;
+        int dy = 0;
+        float x = event.getX();
+        float y = event.getY();
+        token = false;
+
+
+        DecelerateInterpolator interpolator = new DecelerateInterpolator();
+        mScroller = new Scroller(MyApplication.getContext() ,interpolator );
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN: {
+                if (!mScroller.isFinished()) {
+                    mScroller.abortAnimation();
+                }
+                mLastX = x;
+                mLastY = y;
+                time = System.currentTimeMillis();
+                return true;
+            }
+            case MotionEvent.ACTION_MOVE: {
+                if (!mScroller.isFinished()) {
+                    mScroller.abortAnimation();
+                }
+                dx = (int) (mLastX - x);
+                dy = (int) (mLastY - y);
+                mLastX = x;
+                mLastY = y;
+                scrollBy(0, dy);
+                return true;
+            }
+            case MotionEvent.ACTION_UP: {
+                dt = System.currentTimeMillis() - time;
+//                token = true;
+            }
+        }
+        Log.i("MLGJ", "onTouchEvent: "+dy);
+            return true;
+    }
+
     /**
      * 绘画歌词
      */
@@ -79,15 +129,16 @@ public class LrcView extends android.support.v7.widget.AppCompatTextView {
         currentPaint.setTextSize(55);
         currentPaint.setTypeface(Typeface.SERIF);
 
+        float textSize = 45;
         notCurrentPaint.setTextSize(textSize);
         notCurrentPaint.setTypeface(Typeface.DEFAULT);
 
         try {
             setText("");
             canvas.drawText(mLrcList.get(index).getLrcStr(), width / 2, height / 2, currentPaint);
-            Log.i("height", "onDraw: "+height);
             float tempY = height / 2;
             //画出本句之前的句子
+            float textHeight = 60;
             for(int i = index - 1; i >= 0; i--) {
                 //向上推移
                 tempY = tempY - textHeight;
@@ -118,6 +169,10 @@ public class LrcView extends android.support.v7.widget.AppCompatTextView {
 
     public void setIndex(int index) {
         this.index = index;
+        Log.i("IIIIIIIIIIIIIIIIIIINEDEX", "setIndex: "+index);
+//        if (token == true) {
+            invalidate();
+//        }
     }
 
 }

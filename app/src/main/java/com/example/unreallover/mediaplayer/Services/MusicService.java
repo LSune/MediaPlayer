@@ -338,12 +338,6 @@ public class MusicService extends Service
 public void initLrc(){
     mLrcProcess = new LrcProcess();
     //读取歌词文件
-
-//    String lllyric = musicList.get(current).getpath().replace("0", "@");
-//    String timeData[] = lllyric.split("@");
-//    Log.i("llllrc", "initLrc: "+timeData[0]+"0/Top of the World");
-//    mLrcProcess.readLRC(timeData[0]+"0/Top of the World");
-//    Log.i("LRCGET", "initLrc: "+lllyric);
     String lllyric = musicList.get(current).getpath().replace("Music", "@");
     String timeData[] = lllyric.split("@");
     Log.i("llllrc", "initLrc: "+timeData[0]+"Music/Top of the World");
@@ -367,7 +361,7 @@ public void initLrc(){
         @Override
         public void run() {
             MainActivity.lrcView.setIndex(lrcIndex());
-            MainActivity.lrcView.invalidate();
+//            MainActivity.lrcView.invalidate();
             MainActivity.seekBar.setProgress(progressUp());
             MainActivity.nowtime.setText(nowtimeUp());
             handler.postDelayed(mRunnable, 100);

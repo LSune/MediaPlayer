@@ -39,6 +39,7 @@ public class PlayListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         final PlayListAdapter adapter = new PlayListAdapter(musicList);
         recyclerView.setAdapter(adapter);
+
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
             @Override
             public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {

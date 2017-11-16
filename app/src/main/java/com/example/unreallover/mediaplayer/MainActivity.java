@@ -68,9 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     RelativeLayout change;
 
-    private LrcProcess mLrcProcess; //歌词处理
-    private List<LrcContent> lrcList = new ArrayList<LrcContent>(); //存放歌词列表对象
-    private int index = 0;          //歌词检索值
+
 
     // 获取界面中显示歌曲标题、作者文本框
     TextView title, artist,totaltime;
